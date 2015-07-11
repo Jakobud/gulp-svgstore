@@ -67,7 +67,7 @@ module.exports = function (config) {
     }
 
     var referencedIds = []
-    file.cheerio('*').each(function() {
+    $svg.children().each(function() {
       var attrs = $(this).attr()
       Object.keys(attrs).forEach(function (key) {
         var value = attrs[key]
@@ -77,8 +77,23 @@ module.exports = function (config) {
       })
     })
 
-    Object.keys(referencedIds).forEach(function (id) {
-      $svg.html($svg.html().replace(new RegExp(id, 'g'), referencedIds[id]))
+    file.cheerio('*').each(function() {
+      var $elem = $(this)
+      var attrs = $elem.attr()
+
+      Object.keys(attrs).forEach(function (key) {
+        var value = attrs[key]
+        Object.keys(referencedIds).forEach(function (id) {
+          $elem.attr(key, value.replace(new RegExp(id, 'g'), referencedIds[id]))
+        })
+      })
+    })
+
+    file.cheerio('style').each(function() {
+      var $elem = $(this)
+      Object.keys(referencedIds).forEach(function (id) {
+        $elem.html($elem.html().replace(new RegExp(id, 'g'), referencedIds[id]))
+      })
     })
 
     var $defs = file.cheerio('defs')
