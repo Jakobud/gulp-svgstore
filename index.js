@@ -11,6 +11,7 @@ module.exports = function (config) {
   var fileName
   var inlineSvg = config.inlineSvg || false
   var ids = {}
+  var urlPattern = /url\(\s*#([^ ]+?)\s*\)/g
 
   var resultSvg = '<svg xmlns="http://www.w3.org/2000/svg"><defs/></svg>'
   if (!inlineSvg) {
@@ -64,6 +65,21 @@ module.exports = function (config) {
     if (viewBoxAttr) {
       $symbol.attr('viewBox', viewBoxAttr)
     }
+
+    var referencedIds = []
+    file.cheerio('*').each(function() {
+      var attrs = $(this).attr()
+      Object.keys(attrs).forEach(function (key) {
+        var value = attrs[key]
+        if (match = urlPattern.exec(value)) {
+          referencedIds[match[1]] = idAttr + '-' + match[1]
+        }
+      })
+    })
+
+    Object.keys(referencedIds).forEach(function (id) {
+      $svg.html($svg.html().replace(new RegExp(id, 'g'), referencedIds[id]))
+    })
 
     var $defs = file.cheerio('defs')
     if ($defs.length > 0) {
