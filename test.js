@@ -140,7 +140,7 @@ describe('gulp-svgstore unit test', function () {
 
   })
 
-  it('should rename referenced ids', function (done) {
+  it('should rename ids referenced in element attributes', function (done) {
 
     var stream = svgstore({ inlineSvg: true })
 
@@ -195,7 +195,68 @@ describe('gulp-svgstore unit test', function () {
 
   })
 
-  it('should rename referenced ids in style tags', function (done) {
+  it('should rename ids referenced from definitions tags', function (done) {
+
+    var stream = svgstore({ inlineSvg: true })
+
+    stream.on('data', function (file) {
+      var result = file.contents.toString()
+      var target =
+      '<svg xmlns="http://www.w3.org/2000/svg">' +
+      '<defs>' +
+      '<linearGradient id="circle-SVGID_1_" x1="0" y1="0" x2="100%" y2="100%">' +
+      '<stop offset="0" style="stop-color:#FFFFFF"/>' +
+      '<stop offset="1" style="stop-color:#000000"/>' +
+      '</linearGradient>' +
+      '<linearGradient id="square-SVGID_1_" x1="0" y1="0" x2="100%" y2="100%">' +
+      '<stop offset="0" style="stop-color:#FFFFFF"/>' +
+      '<stop offset="1" style="stop-color:#000000"/>' +
+      '</linearGradient>' +
+      '</defs>' +
+      '<symbol id="circle" viewBox="0 0 4 4">' +
+      '<circle fill="url(#circle-SVGID_1_)" cx="2" cy="2" r="1"/>' +
+      '</symbol>' +
+      '<symbol id="square" viewBox="0 0 4 4">' +
+      '<rect fill="url(#square-SVGID_1_)" x="1" y="1" width="2" height="2"/>' +
+      '</symbol>' +
+      '</svg>'
+      assert.equal( result, target )
+      done()
+    })
+
+    stream.write(new gutil.File({
+      contents: new Buffer(
+        '<svg viewBox="0 0 4 4">' +
+        '<defs>' +
+        '<linearGradient id="SVGID_1_" x1="0" y1="0" x2="100%" y2="100%">' +
+        '<stop offset="0" style="stop-color:#FFFFFF"/>' +
+        '<stop offset="1" style="stop-color:#000000"/>' +
+        '</linearGradient>' +
+        '</defs>' +
+        '<circle fill="url(#SVGID_1_)" cx="2" cy="2" r="1"/>' +
+        '</svg>')
+    , path: 'circle.svg'
+    }))
+
+    stream.write(new gutil.File({
+      contents: new Buffer(
+        '<svg viewBox="0 0 4 4">' +
+        '<defs>' +
+        '<linearGradient id="SVGID_1_" x1="0" y1="0" x2="100%" y2="100%">' +
+        '<stop offset="0" style="stop-color:#FFFFFF"/>' +
+        '<stop offset="1" style="stop-color:#000000"/>' +
+        '</linearGradient>' +
+        '</defs>' +
+        '<rect fill="url(#SVGID_1_)" x="1" y="1" width="2" height="2"/>' +
+        '</svg>')
+    , path: 'square.svg'
+    }))
+
+    stream.end()
+
+  })
+
+  it('should rename ids referenced in style tags', function (done) {
 
     var stream = svgstore({ inlineSvg: true })
 
