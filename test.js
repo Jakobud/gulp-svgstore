@@ -140,6 +140,179 @@ describe('gulp-svgstore unit test', function () {
 
   })
 
+  it('should rename referenced ids', function (done) {
+
+    var stream = svgstore({ inlineSvg: true })
+
+    stream.on('data', function (file) {
+      var result = file.contents.toString()
+      var target =
+      '<svg xmlns="http://www.w3.org/2000/svg">' +
+      '<symbol id="circle-with-gradient" viewBox="0 0 4 4">' +
+      '<linearGradient id="circle-with-gradient-SVGID_1_" x1="0" y1="0" x2="100%" y2="100%">' +
+      '<stop offset="0" style="stop-color:#FFFFFF"/>' +
+      '<stop offset="1" style="stop-color:#000000"/>' +
+      '</linearGradient>' +
+      '<circle fill="url(#circle-with-gradient-SVGID_1_)" cx="2" cy="2" r="1"/>' +
+      '</symbol>' +
+      '<symbol id="square-with-gradient" viewBox="0 0 4 4">' +
+      '<linearGradient id="square-with-gradient-SVGID_1_" x1="0" y1="0" x2="100%" y2="100%">' +
+      '<stop offset="0" style="stop-color:#FFFFFF"/>' +
+      '<stop offset="1" style="stop-color:#000000"/>' +
+      '</linearGradient>' +
+      '<rect fill="url(#square-with-gradient-SVGID_1_)" x="1" y="1" width="2" height="2"/>' +
+      '</symbol>' +
+      '</svg>'
+      assert.equal( result, target )
+      done()
+    })
+
+    stream.write(new gutil.File({
+      contents: new Buffer(
+        '<svg viewBox="0 0 4 4">' +
+        '<linearGradient id="SVGID_1_" x1="0" y1="0" x2="100%" y2="100%">' +
+        '<stop offset="0" style="stop-color:#FFFFFF"/>' +
+        '<stop offset="1" style="stop-color:#000000"/>' +
+        '</linearGradient>' +
+        '<circle fill="url(#SVGID_1_)" cx="2" cy="2" r="1"/>' +
+        '</svg>')
+    , path: 'circle-with-gradient.svg'
+    }))
+
+    stream.write(new gutil.File({
+      contents: new Buffer(
+        '<svg viewBox="0 0 4 4">' +
+        '<linearGradient id="SVGID_1_" x1="0" y1="0" x2="100%" y2="100%">' +
+        '<stop offset="0" style="stop-color:#FFFFFF"/>' +
+        '<stop offset="1" style="stop-color:#000000"/>' +
+        '</linearGradient>' +
+        '<rect fill="url(#SVGID_1_)" x="1" y="1" width="2" height="2"/>' +
+        '</svg>')
+    , path: 'square-with-gradient.svg'
+    }))
+
+    stream.end()
+
+  })
+
+  it('should rename referenced ids in style tags', function (done) {
+
+    var stream = svgstore({ inlineSvg: true })
+
+    stream.on('data', function (file) {
+      var result = file.contents.toString()
+      var target =
+      '<svg xmlns="http://www.w3.org/2000/svg">' +
+      '<symbol id="square-and-circle" viewBox="0 0 4 4">' +
+      '<linearGradient id="square-and-circle-SVGID_1_" x1="0" y1="0" x2="100%" y2="100%">' +
+      '<stop offset="0" style="stop-color:#FFFFFF"/>' +
+      '<stop offset="1" style="stop-color:#000000"/>' +
+      '</linearGradient>' +
+      '<style>' +
+      'rect { fill: url(#square-and-circle-SVGID_1_); }' +
+      'circle { fill: url(#square-and-circle-SVGID_2_); }' +
+      '</style>' +
+      '<rect "x="1" y="1" width="2" height="2"/>' +
+      '<circle cx="2" cy="2" r="1"/>' +
+      '</symbol>' +
+      '</svg>'
+      assert.equal( result, target )
+      done()
+    })
+
+    stream.write(new gutil.File({
+      contents: new Buffer(
+        '<svg viewBox="0 0 4 4">' +
+        '<linearGradient id="SVGID_1_" x1="0" y1="0" x2="100%" y2="100%">' +
+        '<stop offset="0" style="stop-color:#FFFFFF"/>' +
+        '<stop offset="1" style="stop-color:#000000"/>' +
+        '</linearGradient>' +
+        '<style>' +
+        'rect { fill: url(#SVGID_1_); }' +
+        'circle { fill: url(#SVGID_2_); }' +
+        '</style>' +
+        '<rect "x="1" y="1" width="2" height="2"/>' +
+        '<circle cx="2" cy="2" r="1"/>' +
+        '</svg>')
+    , path: 'square-and-circle.svg'
+    }))
+
+    stream.end()
+
+  })
+
+  it('should not rename ids in text elements', function (done) {
+
+    var stream = svgstore({ inlineSvg: true })
+
+    stream.on('data', function (file) {
+      var result = file.contents.toString()
+      var target =
+      '<svg xmlns="http://www.w3.org/2000/svg">' +
+      '<symbol id="text-with-gradient" viewBox="0 0 4 4">' +
+      '<linearGradient id="text-with-gradient-SVGID_1_" x1="0" y1="0" x2="100%" y2="100%">' +
+      '<stop offset="0" style="stop-color:#FFFFFF"/>' +
+      '<stop offset="1" style="stop-color:#000000"/>' +
+      '</linearGradient>' +
+      '<text fill="url(#text-with-gradient-SVGID_1_)" x="20" y="20" font-family="sans-serif" font-size="20px">Hello #hashtag #SVGID_1_ url(#SVGID_1_)</text>' +
+      '</symbol>' +
+      '</svg>'
+      assert.equal( result, target )
+      done()
+    })
+
+    stream.write(new gutil.File({
+      contents: new Buffer(
+        '<svg viewBox="0 0 4 4">' +
+        '<linearGradient id="SVGID_1_" x1="0" y1="0" x2="100%" y2="100%">' +
+        '<stop offset="0" style="stop-color:#FFFFFF"/>' +
+        '<stop offset="1" style="stop-color:#000000"/>' +
+        '</linearGradient>' +
+        '<text fill="url(#SVGID_1_)" x="20" y="20" font-family="sans-serif" font-size="20px">Hello #hashtag #SVGID_1_ url(#SVGID_1_)</text>' +
+        '</svg>')
+    , path: 'text-with-gradient.svg'
+    }))
+
+    stream.end()
+
+  })
+
+  it('should not rename un-referenced ids', function (done) {
+
+    var stream = svgstore({ inlineSvg: true })
+
+    stream.on('data', function (file) {
+      var result = file.contents.toString()
+      var target =
+      '<svg xmlns="http://www.w3.org/2000/svg">' +
+      '<symbol id="circle-with-id" viewBox="0 0 4 4">' +
+      '<linearGradient id="circle-with-id-SVGID_1_" x1="0" y1="0" x2="100%" y2="100%">' +
+      '<stop offset="0" style="stop-color:#FFFFFF"/>' +
+      '<stop offset="1" style="stop-color:#000000"/>' +
+      '</linearGradient>' +
+      '<circle id="the-circle" fill="url(#circle-with-id-SVGID_1_)" cx="2" cy="2" r="1"/>' +
+      '</symbol>' +
+      '</svg>'
+      assert.equal( result, target )
+      done()
+    })
+
+    stream.write(new gutil.File({
+      contents: new Buffer(
+        '<svg viewBox="0 0 4 4">' +
+        '<linearGradient id="SVGID_1_" x1="0" y1="0" x2="100%" y2="100%">' +
+        '<stop offset="0" style="stop-color:#FFFFFF"/>' +
+        '<stop offset="1" style="stop-color:#000000"/>' +
+        '</linearGradient>' +
+        '<circle id="the-circle" fill="url(#SVGID_1_)" cx="2" cy="2" r="1"/>' +
+        '</svg>')
+    , path: 'circle-with-id.svg'
+    }))
+
+    stream.end()
+
+  })
+
   it('should use cached cheerio object instead of file contents', function (done) {
 
     var stream = svgstore({ inlineSvg: true })

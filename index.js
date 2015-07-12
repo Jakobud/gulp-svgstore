@@ -38,6 +38,7 @@ module.exports = function (config) {
     }
 
     var $svg = file.cheerio('svg')
+    var $style = file.cheerio('style')
     var idAttr = path.basename(file.relative, path.extname(file.relative))
     var viewBoxAttr = $svg.attr('viewBox')
     var $symbol = $('<symbol/>')
@@ -77,6 +78,12 @@ module.exports = function (config) {
       })
     })
 
+    $style.each(function() {
+      while (match = urlPattern.exec($(this).html())) {
+        referencedIds[match[1]] = idAttr + '-' + match[1]
+      }
+    })
+
     file.cheerio('*').each(function() {
       var $elem = $(this)
       var attrs = $elem.attr()
@@ -84,12 +91,14 @@ module.exports = function (config) {
       Object.keys(attrs).forEach(function (key) {
         var value = attrs[key]
         Object.keys(referencedIds).forEach(function (id) {
-          $elem.attr(key, value.replace(new RegExp(id, 'g'), referencedIds[id]))
+          if (value.search(id) > -1) {
+            $elem.attr(key, value.replace(new RegExp(id, 'g'), referencedIds[id]))
+          }
         })
       })
     })
 
-    file.cheerio('style').each(function() {
+    $style.each(function() {
       var $elem = $(this)
       Object.keys(referencedIds).forEach(function (id) {
         $elem.html($elem.html().replace(new RegExp(id, 'g'), referencedIds[id]))
